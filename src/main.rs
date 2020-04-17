@@ -32,10 +32,7 @@ struct APG {
     elements: HashSet<Rc<Element>>,
     values: HashSet<Rc<Value>>,    
     labels: HashSet<Rc<Label>>,
-    types: HashSet<Rc<Type>>,
-
-    lambda: fn(_e: &Element) -> Label,
-    tau: fn(_v: Value) -> Type,
+    lambda_upsilon: HashMap<String, (String, Rc<Value>)>,
 }
 
 impl APG {
@@ -118,32 +115,12 @@ impl APG {
         None
     }
 
-    fn add_type(&mut self, tp: Type) {
-        let tp = Rc::new(tp);
-        self.types.insert(tp.clone());
-    }
-
-    fn add_label_type(&mut self, label_name: &str) {
-        let tp = Type::Lbl(self.get_label(label_name).unwrap());
-        self.add_type(tp);
-    }
-
-    fn get_label_type(&self, label_name: &str) -> Option<Rc<Type>> {
-        for tp in self.types.iter() {            
-            if let Ok(Type::Lbl(label)) = Rc::try_unwrap(tp.clone()) {
-                if let Ok(l) = Rc::try_unwrap(label) {
-                    if l.0 == label_name {
-                        return Some(tp.clone());
-                    }
-                }                
-            }            
-        }
-
-        None        
-    }
-
-    fn add_product_type(&mut self, tp1: Rc<Type>, tp2: Rc<Type>) {
-        self.types.insert(Rc::new(Type::Product(tp1, tp2)));
+    fn add_lambda_upsilon(&mut self, e: &str, l: &str, v: Value) {
+        self.add_element(e);
+        self.add_label(l);
+        let v_rc = Rc::new(v);
+        self.values.insert(v_rc.clone());
+        self.lambda_upsilon.insert(e.to_string(), (l.to_string(), v_rc.clone()));
     }
 }
 
@@ -153,39 +130,31 @@ impl Default for APG {
             elements: HashSet::default(),
             values: HashSet::default(), 
             labels: HashSet::default(),
-            types: HashSet::default(),
-
-            lambda: |_e| Label("".to_string()),
-            tau: |_e| Type::Zero,
+            lambda_upsilon: HashMap::default(),
         }
     }
+}
+
+macro_rules! ev {
+    ($apg: ident, $e: expr) => {
+        $apg.get_element_value($e).unwrap()
+    };
+}
+
+macro_rules! add {
+    ($apg: ident, $e: expr, $l: expr, ()) => {
+        $apg.add_lambda_upsilon($e, $l, Value::Unit)
+    };
+    ($apg: ident, $e: expr, $l: expr, ($v1: expr, $v2: expr)) => {
+        $apg.add_lambda_upsilon($e, $l, Value::Pair($v1, $v2))
+    };
 }
 
 fn main() {
     let mut apg = APG::default();
 
-    // set up elements
-    apg.add_element("v1");
-    apg.add_element("v2");
-    apg.add_element("e1");
-
-    // set up values
-    apg.add_value(Value::Unit);
-    apg.add_element_value("v1");
-    apg.add_element_value("v2");
-    apg.add_pair_value(apg.get_element_value("v1").unwrap(), apg.get_element_value("v2").unwrap());
-
-    // set up label
-    apg.add_label("Person");
-    apg.add_label("knows");
-
-    // set up type
-    apg.add_type(Type::One);
-    apg.add_label_type("Person");
-    apg.add_product_type(apg.get_label_type("Person").unwrap(), apg.get_label_type("Person").unwrap());
- 
-
-    // let _c1 = (v1, person_label.clone(), Value::Unit, Type::One);
-    // let _c2 = (v2, person_label.clone(), Value::Unit, Type::One);
-    // let _c3 = (e1, knows_label.clone(), know_e1.clone(), knows_type);
+    // set up
+    add!(apg, "v1", "Person", ());
+    add!(apg, "v2", "Person", ());
+    add!(apg, "e1", "knows", (ev!(apg, "v1"), ev!(apg, "v2")));
 }
