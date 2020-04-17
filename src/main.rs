@@ -2,14 +2,14 @@ use std::rc::Rc;
 use std::collections::{HashMap, HashSet};
 // use std::cell::RefCell;
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct Element(String);
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 enum Value {
     Unit,
-    Inl(Rc<Value>),
-    Inr(Rc<Value>),
+    Inl(Rc<Value>, Rc<Type>),
+    Inr(Rc<Type>, Rc<Value>),
     Pair(Rc<Value>, Rc<Value>),
     Prim(Rc<Value>),
     Id(Rc<Element>),
@@ -122,6 +122,12 @@ impl APG {
         self.values.insert(v_rc.clone());
         self.lambda_upsilon.insert(e.to_string(), (l.to_string(), v_rc.clone()));
     }
+
+    fn check_labels(&self) {
+        for element in self.elements.iter() {
+            println!("{:?}", element);
+        }    
+    }
 }
 
 impl Default for APG {
@@ -133,6 +139,18 @@ impl Default for APG {
             lambda_upsilon: HashMap::default(),
         }
     }
+}
+
+struct APGMorphism {
+    from: Rc<APG>,
+    to: Rc<APG>,
+    element_mapping: fn(Rc<Element>) -> Rc<Element>,
+}
+
+impl APGMorphism {
+fn check_source_labels(&self) {
+    self.from.check_labels();
+}
 }
 
 macro_rules! ev {
@@ -148,6 +166,15 @@ macro_rules! add {
     ($apg: ident, $e: expr, $l: expr, ($v1: expr, $v2: expr)) => {
         $apg.add_lambda_upsilon($e, $l, Value::Pair($v1, $v2))
     };
+
+    ($apg: ident, $e: expr, $l: expr, $v: expr) => {
+        $apg.add_lambda_upsilon($e, $l, $v)
+    };
+}
+
+fn get_equalizer(h: &APGMorphism, _k: &APGMorphism) -> APG {
+    h.check_source_labels();
+    APG::default()
 }
 
 fn main() {
@@ -157,4 +184,33 @@ fn main() {
     add!(apg, "v1", "Person", ());
     add!(apg, "v2", "Person", ());
     add!(apg, "e1", "knows", (ev!(apg, "v1"), ev!(apg, "v2")));
+
+    let mut apg1 = APG::default();
+    let tp_right = Rc::new(Type::Lbl(Rc::new(Label("M".to_string()))));
+    add!(apg1, "f1", "Sex", Value::Inl(Rc::new(Value::Unit), tp_right));
+    let tp_left = Rc::new(Type::Lbl(Rc::new(Label("F".to_string()))));
+    add!(apg1, "m1", "Sex", Value::Inr(tp_left, Rc::new(Value::Unit)));
+
+    let mut apg2 = APG::default();
+    let tp_right = Rc::new(Type::Lbl(Rc::new(Label("M".to_string()))));
+    add!(apg2, "f1", "Sex", Value::Inl(Rc::new(Value::Unit), tp_right));
+    let tp_left = Rc::new(Type::Lbl(Rc::new(Label("F".to_string()))));
+    add!(apg2, "m1", "Sex", Value::Inr(tp_left, Rc::new(Value::Unit)));
+
+    let apg1_ref = Rc::new(apg1);
+    let apg2_ref = Rc::new(apg2);
+
+    let mor1 = APGMorphism {
+        from: apg1_ref.clone(),
+        to: apg2_ref.clone(),
+        element_mapping: |_e| Rc::new(Element("f1".to_string())),
+    };
+
+    let mor2 = APGMorphism {
+        from: apg1_ref.clone(),
+        to: apg2_ref.clone(),
+        element_mapping: |e| e,
+    };
+
+    let equalizer = get_equalizer(&mor1, &mor2);
 }
