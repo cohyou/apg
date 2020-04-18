@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct Element(String);
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 enum Value {
     Unit,
     Inl(Rc<Value>, Rc<Type>),
@@ -15,10 +15,10 @@ enum Value {
     Id(Rc<Element>),
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct Label(String);
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 enum Type {
     Zero,
     One,
@@ -84,12 +84,10 @@ impl APG {
 
     fn get_element_value(&self, element_name: &str) -> Option<Rc<Value>> {
         for value in self.values.iter() {            
-            if let Ok(Value::Id(elem)) = Rc::try_unwrap(value.clone()) {
-                if let Ok(e) = Rc::try_unwrap(elem) {
-                    if e.0 == element_name {
-                        return Some(value.clone());
-                    }
-                }                
+            if let Value::Id(elem) = value.as_ref() {    
+                if elem.0 == element_name {
+                    return Some(value.clone());
+                }
             }            
         }
 
@@ -117,6 +115,7 @@ impl APG {
 
     fn add_lambda_upsilon(&mut self, e: &str, l: &str, v: Value) {
         self.add_element(e);
+        self.add_element_value(e);
         self.add_label(l);
         let v_rc = Rc::new(v);
         self.values.insert(v_rc.clone());
@@ -166,7 +165,6 @@ macro_rules! add {
     ($apg: ident, $e: expr, $l: expr, ($v1: expr, $v2: expr)) => {
         $apg.add_lambda_upsilon($e, $l, Value::Pair($v1, $v2))
     };
-
     ($apg: ident, $e: expr, $l: expr, $v: expr) => {
         $apg.add_lambda_upsilon($e, $l, $v)
     };
@@ -181,7 +179,7 @@ fn main() {
     let mut apg = APG::default();
 
     // set up
-    add!(apg, "v1", "Person", ());
+    add!(apg, "v1", "Person", ()); 
     add!(apg, "v2", "Person", ());
     add!(apg, "e1", "knows", (ev!(apg, "v1"), ev!(apg, "v2")));
 
