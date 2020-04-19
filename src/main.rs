@@ -1,11 +1,18 @@
 use std::rc::Rc;
 use std::collections::{HashMap, HashSet};
 // use std::cell::RefCell;
+use std::fmt;
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 struct Element(String);
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+impl fmt::Debug for Element {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "E{:?}", self.0)
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
 enum Value {
     Unit,
     Inl(Rc<Value>, Rc<Type>),
@@ -15,8 +22,27 @@ enum Value {
     Id(Rc<Element>),
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+impl fmt::Debug for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::Unit => write!(f, "()"),
+            Value::Inl(v, t) => write!(f, "{:?} + {:?}", v, t),
+            Value::Inr(t, v) => write!(f, "{:?} + {:?}", t, v),
+            Value::Pair(v1, v2) => write!(f, "({:?}, {:?})", v1, v2),
+            Value::Prim(v) => write!(f, "P{:?}", v),
+            Value::Id(e) => write!(f, "{:?}", e),
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
 struct Label(String);
+
+impl fmt::Debug for Label {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "L{:?}", self.0)
+    }
+}
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 enum Type {
@@ -28,6 +54,7 @@ enum Type {
     Lbl(Rc<Label>),
 }
 
+// #[derive(Debug)]
 struct APG {
     elements: HashSet<Rc<Element>>,
     values: HashSet<Rc<Value>>,    
@@ -35,6 +62,14 @@ struct APG {
     lambda_upsilon: HashMap<String, (String, Rc<Value>)>,
 }
 
+impl fmt::Debug for APG {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "elements: {:?}", self.elements);
+        writeln!(f, "values:   {:?}", self.values);
+        writeln!(f, "labels:   {:?}", self.labels);
+        writeln!(f, "lambda_upsilon: {:?}", self.lambda_upsilon)
+    }
+}
 impl APG {
 //     fn new(
 //             es: HashSet<Element>, vs: HashSet<Value<'a>>,
@@ -122,10 +157,25 @@ impl APG {
         self.lambda_upsilon.insert(e.to_string(), (l.to_string(), v_rc.clone()));
     }
 
-    fn check_labels(&self) {
-        for element in self.elements.iter() {
-            println!("{:?}", element);
-        }    
+    fn filter_labels_by_element<P>(&self, pred: P) -> HashSet<Rc<Label>>
+        where P: for<'r> FnMut(&'r Rc<Element>) -> bool
+    {
+        self.elements.iter().cloned()
+            .filter(pred)
+            .map(|e| Rc::new(Label(self.lambda_upsilon[&e.as_ref().0].0.clone())))
+            .collect()
+    }
+
+    fn filter_values<P>(&self, pred: P) -> HashSet<Rc<Value>>
+        where P: for<'r> FnMut(&'r Rc<Value>) -> bool
+    {
+        self.values.iter().cloned().filter(pred).collect()
+    }
+
+    fn filter_elements<P>(&self, pred: P) -> HashSet<Rc<Element>>
+        where P: for<'r> FnMut(&'r Rc<Element>) -> bool
+    {
+        self.elements.iter().cloned().filter(pred).collect()
     }
 }
 
@@ -146,11 +196,12 @@ struct APGMorphism {
     element_mapping: fn(Rc<Element>) -> Rc<Element>,
 }
 
-impl APGMorphism {
-fn check_source_labels(&self) {
-    self.from.check_labels();
-}
-}
+// impl APGMorphism {
+//     fn check_source_labels(&self) {
+//         self.from.filter_labels(|_a| true);
+//         self.from.filter_elements(|_a| true);
+//     }
+// }
 
 macro_rules! ev {
     ($apg: ident, $e: expr) => {
@@ -170,9 +221,13 @@ macro_rules! add {
     };
 }
 
-fn get_equalizer(h: &APGMorphism, _k: &APGMorphism) -> APG {
-    h.check_source_labels();
-    APG::default()
+fn get_equalizer(h: &APGMorphism, k: &APGMorphism) -> APG {
+    APG {
+        elements: h.from.filter_elements(|e| (h.element_mapping)(e.clone()) == (k.element_mapping)(e.clone())),
+        values: h.from.filter_values(|_a| true),
+        labels: h.from.filter_labels_by_element(|e| (h.element_mapping)(e.clone()) == (k.element_mapping)(e.clone()) ),
+        lambda_upsilon: HashMap::default(),
+    }
 }
 
 fn main() {
@@ -211,4 +266,7 @@ fn main() {
     };
 
     let equalizer = get_equalizer(&mor1, &mor2);
+    println!("<FROM>\n{:?}", apg1_ref);
+    println!("<TO>\n{:?}", apg2_ref);
+    println!("<EQ>\n{:?}", equalizer);
 }
