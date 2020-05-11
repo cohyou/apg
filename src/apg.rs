@@ -13,8 +13,6 @@ pub use label::Label;
 pub use r#type::Type;
 
 
-
-// #[derive(Debug)]
 pub struct APG {
     elements: HashSet<Rc<Element>>,
     values: HashSet<Rc<Value>>,    
@@ -24,35 +22,15 @@ pub struct APG {
 
 impl fmt::Debug for APG {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "elements: {:?}", self.elements);
-        writeln!(f, "values:   {:?}", self.values);
-        writeln!(f, "labels:   {:?}", self.labels);
+        let _ = writeln!(f, "elements: {:?}", self.elements);
+        let _ = writeln!(f, "values:   {:?}", self.values);
+        let _ = writeln!(f, "labels:   {:?}", self.labels);
         writeln!(f, "lambda_upsilon: {:?}", self.lambda_upsilon)
     }
 }
 
+#[allow(dead_code)]
 impl APG {
-//     fn new(
-//             es: HashSet<Element>, vs: HashSet<Value<'a>>,
-//             ls: HashSet<Label>, ts: HashSet<Type<'a>>,
-//             lambda: fn(_e: &Element) -> Label,
-//             upsilon: fn(_e: &Element) -> Value,
-//             sigma: fn(_l: Label) -> Type<'a>,
-//             tau: fn(_v: Value) -> Type<'a>,        
-//           ) -> APG<'a> {
-//         APG {
-//             elements: es, 
-//             values: vs,
-//             labels: ls,
-//             types: ts,
-
-//             lambda: lambda,
-//             upsilon: upsilon,
-//             sigma: sigma,
-//             tau: tau,
-//         }
-//     }
-
     fn add_element(&mut self, name: &str) {
         let element = Element(name.to_string());
         self.elements.insert(Rc::new(element));
@@ -153,6 +131,7 @@ impl Default for APG {
 
 type ElemMapping = fn(Rc<Element>) -> Rc<Element>;
 
+#[allow(dead_code)]
 pub struct APGMorphism {
     from: Rc<APG>,
     to: Rc<APG>,

@@ -1,9 +1,5 @@
 mod apg;
 
-use std::rc::Rc;
-// use std::cell::RefCell;
-use std::fmt;
-
 pub use apg::{APG, APGMorphism, get_equalizer};
 pub use apg::{Element, Value, Label, Type};
 

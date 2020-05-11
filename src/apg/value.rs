@@ -18,7 +18,7 @@ impl fmt::Debug for Value {
             Value::Unit => write!(f, "()"),
             Value::Inl(v, t) => write!(f, "{:?} + {:?}", v, t),
             Value::Inr(t, v) => write!(f, "{:?} + {:?}", t, v),
-            Value::Pair(v1, v2) => write!(f, "({:?}, {:?})", v1, v2),
+            Value::Pair(v1, v2) => write!(f, "{:?} * {:?}", v1, v2),
             Value::Prim(v) => write!(f, "P{:?}", v),
             Value::Id(e) => write!(f, "{:?}", e),
         }
