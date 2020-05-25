@@ -31,6 +31,15 @@ impl fmt::Debug for APG {
 
 #[allow(dead_code)]
 impl APG {
+    fn zero() -> APG {
+        APG {
+            elements: HashSet::default(),
+            values: HashSet::default(),
+            labels: HashSet::default(),
+            lambda_upsilon: HashMap::default(),
+        }
+    }
+
     fn add_element(&mut self, name: &str) {
         let element = Element(name.to_string());
         self.elements.insert(Rc::new(element));
