@@ -1,0 +1,16 @@
+alpha = _{ 'a'..'z' | 'A'..'Z' }
+digit = { '0'..'9' }
+
+ident = { (alpha | digit)+ }
+
+value = { "()" }
+
+tp = { "1" | "0" }
+
+def = { !digit ~ ident ~ " " ~ "=" ~ " " ~ value ~ " :" ~ ident ~ " [" ~ tp ~ "]" }
+
+ws = _{ (" " | NEWLINE )+ }
+
+apg = { "{" ~ ws ~ (def ~ ws)+ ~ "}" }
+
+apg_file = { SOI ~ apg ~ EOI }

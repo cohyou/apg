@@ -1,3 +1,13 @@
+extern crate pest;
+#[macro_use]
+extern crate pest_derive;
+
+use pest::Parser;
+
+#[derive(Parser)]
+#[grammar = "apg.pest"]
+pub struct APGParser;
+
 use std::rc::Rc;
 use apg::*;
 
@@ -75,8 +85,21 @@ fn read_csv() -> std::io::Result<APG> {
     Ok(apg)
 }
 
+use std::collections::HashMap;
+use std::fs;
+
 fn main() {
-    let _res = read_csv();
+    let successful_parse = APGParser::parse(Rule::apg, "{ e1 = () :True [1] }");
+    println!("{:?}", successful_parse);
+
+    let unparsed_file = fs::read_to_string("src/_.apg").expect("cannot read file");
+    let file = APGParser::parse(Rule::apg_file, &unparsed_file)
+        .expect("unsuccessful parse") 
+        .next().unwrap(); 
+    println!("{:?}", file);
+
+    // let _res = read_csv();
+
 
     // let apg = apg();
 
