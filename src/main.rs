@@ -85,18 +85,24 @@ fn read_csv() -> std::io::Result<APG> {
     Ok(apg)
 }
 
-use std::collections::HashMap;
 use std::fs;
 
 fn main() {
-    let successful_parse = APGParser::parse(Rule::apg, "{ e1 = () :True [1] }");
-    println!("{:?}", successful_parse);
+    // let successful_parse = APGParser::parse(Rule::apg, "{ e1 = () :True [1] }");
+    // println!("{:?}", successful_parse);
 
     let unparsed_file = fs::read_to_string("src/_.apg").expect("cannot read file");
     let file = APGParser::parse(Rule::apg_file, &unparsed_file)
         .expect("unsuccessful parse") 
         .next().unwrap(); 
-    println!("{:?}", file);
+    // println!("{:?}", file);
+    // let Pair { rule: r, span: s, inner: i } = file;
+    for line in file.into_inner() {
+        // println!("{:?}", line);
+        for l in line.into_inner() {
+            println!("{:?}", l);
+        }
+    }
 
     // let _res = read_csv();
 
