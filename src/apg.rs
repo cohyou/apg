@@ -40,7 +40,7 @@ impl APG {
         }
     }
 
-    fn add_element(&mut self, name: &str) {
+    pub fn add_element(&mut self, name: &str) {
         let element = Element(name.to_string());
         self.elements.insert(Rc::new(element));
     }
@@ -55,7 +55,7 @@ impl APG {
         None
     }
 
-    fn add_value(&mut self, v: Value) {
+    pub fn add_value(&mut self, v: Value) {
         let v = Rc::new(v);
         self.values.insert(v.clone());
     }
@@ -81,7 +81,7 @@ impl APG {
         self.add_value(Value::Pair(v1, v2));
     }
 
-    fn add_label(&mut self, name: &str) {
+    pub fn add_label(&mut self, name: &str) {
         let lbl = Label(name.to_string());
         self.labels.insert(Rc::new(lbl));
     }

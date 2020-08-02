@@ -99,16 +99,38 @@ fn main() {
         .expect("unsuccessful parse") 
         .next().unwrap(); 
 
+    let mut apg = APG::default();
+
     for line in file.into_inner() {
-        // println!("{:?}", line);
         for l in line.into_inner() {
-            for l in l.into_inner() {
-                println!("Pair: {{");
-                println!("  {:?}", l.as_rule());
-                println!("  {:?}", l.as_span());
-                println!("  {:?}", l.into_inner());
-                println!("}}");
-            }
+            let mut inner = l.into_inner();
+            // element
+            let span = inner.next().unwrap().as_span();
+            apg.add_element(span.as_str());
+            // println!("{:?}", element);
+
+            // value
+            let span = inner.next().unwrap().as_span();
+            let value = match span.as_str() {
+                "()" => Value::Unit,
+                _ => unimplemented!(),
+            };
+            apg.add_value(value);
+            // println!("{:?}", value);
+
+            // label
+            let span = inner.next().unwrap().as_span();
+            apg.add_label(span.as_str());
+            // println!("{:?}", label);
+
+            // type
+            let span = inner.next().unwrap().as_span();
+            let tp = match span.as_str() {
+                "1" => Type::One,
+                "0" => Type::Zero,
+                _ => unimplemented!(),
+            };
+            println!("{:?}", tp);
         }
     }
 
