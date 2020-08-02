@@ -106,7 +106,7 @@ fn main() {
             let mut inner = l.into_inner();
             // element
             let span = inner.next().unwrap().as_span();
-            apg.add_element(span.as_str());
+            let element = span.as_str();
             // println!("{:?}", element);
 
             // value
@@ -115,12 +115,11 @@ fn main() {
                 "()" => Value::Unit,
                 _ => unimplemented!(),
             };
-            apg.add_value(value);
             // println!("{:?}", value);
 
             // label
             let span = inner.next().unwrap().as_span();
-            apg.add_label(span.as_str());
+            let label = span.as_str();
             // println!("{:?}", label);
 
             // type
@@ -130,9 +129,20 @@ fn main() {
                 "0" => Type::Zero,
                 _ => unimplemented!(),
             };
-            println!("{:?}", tp);
+            let tp_from = match value {
+                Value::Unit => Type::One,
+                _ => unimplemented!(),
+            };
+            if tp == tp_from {
+                println!("ok");
+            } else {
+                println!("ng");
+            }
+
+            apg.add_lambda_upsilon(element, label, value);
         }
     }
+    println!("{:?}", apg);
 
     // let _res = read_csv();
 
