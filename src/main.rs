@@ -87,13 +87,7 @@ fn read_csv() -> std::io::Result<APG> {
 
 use std::fs;
 
-// use pest::iterators::Pair;
-// use apg::Value::Pair;
-
 fn main() {
-    // let successful_parse = APGParser::parse(Rule::apg, "{ e1 = () :True [1] }");
-    // println!("{:?}", successful_parse);
-
     let unparsed_file = fs::read_to_string("src/_.apg").expect("cannot read file");
     let file = APGParser::parse(Rule::apg_file, &unparsed_file)
         .expect("unsuccessful parse") 
@@ -107,7 +101,6 @@ fn main() {
             // element
             let span = inner.next().unwrap().as_span();
             let element = span.as_str();
-            // println!("{:?}", element);
 
             // value
             let span = inner.next().unwrap().as_span();
@@ -115,12 +108,10 @@ fn main() {
                 "()" => Value::Unit,
                 _ => unimplemented!(),
             };
-            // println!("{:?}", value);
 
             // label
             let span = inner.next().unwrap().as_span();
             let label = span.as_str();
-            // println!("{:?}", label);
 
             // type
             let span = inner.next().unwrap().as_span();
@@ -143,11 +134,6 @@ fn main() {
         }
     }
     println!("{:?}", apg);
-
-    // let _res = read_csv();
-
-
-    // let apg = apg();
 
     // let equalizer = eq();
     // println!("<EQ>\n{:?}", equalizer);
