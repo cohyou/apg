@@ -93,48 +93,54 @@ fn main() {
         .expect("unsuccessful parse") 
         .next().unwrap(); 
 
-    let mut apg = APG::default();
-
-    for line in file.into_inner() {
-        for l in line.into_inner() {
-            let mut inner = l.into_inner();
-            // element
-            let span = inner.next().unwrap().as_span();
-            let element = span.as_str();
-
-            // value
-            let span = inner.next().unwrap().as_span();
-            let value = match span.as_str() {
-                "()" => Value::Unit,
-                _ => unimplemented!(),
-            };
-
-            // label
-            let span = inner.next().unwrap().as_span();
-            let label = span.as_str();
-
-            // type
-            let span = inner.next().unwrap().as_span();
-            let tp = match span.as_str() {
-                "1" => Type::One,
-                "0" => Type::Zero,
-                _ => unimplemented!(),
-            };
-            let tp_from = match value {
-                Value::Unit => Type::One,
-                _ => unimplemented!(),
-            };
-            if tp == tp_from {
-                println!("ok");
-            } else {
-                println!("ng");
+    for def in file.into_inner() {
+        if def.as_rule() == Rule::define {
+            let mut apg = APG::default();
+            for line in def.into_inner() {
+                for l in line.into_inner() {
+                    // println!("{:?}", "start");
+                    let mut inner = l.into_inner();
+        
+                    // element
+                    let span = inner.next().unwrap().as_span();
+                    let element = span.as_str();
+                    // println!("{:?}", "element");
+                    // value
+                    let span = inner.next().unwrap().as_span();
+                    let value = match span.as_str() {
+                        "()" => Value::Unit,
+                        _ => unimplemented!(),
+                    };
+                    // println!("{:?}", "value");
+                    // label
+                    let span = inner.next().unwrap().as_span();
+                    let label = span.as_str();
+                    // println!("{:?}", "label");
+                    // type
+                    let span = inner.next().unwrap().as_span();
+                    let tp = match span.as_str() {
+                        "1" => Type::One,
+                        "0" => Type::Zero,
+                        _ => unimplemented!(),
+                    };
+                    let tp_from = match value {
+                        Value::Unit => Type::One,
+                        _ => unimplemented!(),
+                    };
+                    if tp == tp_from {
+                        // println!("ok");
+                        ;
+                    } else {
+                        println!("ng");
+                    }
+                    // println!("{:?}", "tp");
+                    apg.add_lambda_upsilon(element, label, value);
+                }
             }
-
-            apg.add_lambda_upsilon(element, label, value);
+            println!("{:?}", apg);
         }
     }
-    println!("{:?}", apg);
-
+    
     // let equalizer = eq();
     // println!("<EQ>\n{:?}", equalizer);
 }

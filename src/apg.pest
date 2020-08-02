@@ -13,4 +13,10 @@ ws = _{ (" " | NEWLINE )+ }
 
 apg = { "{" ~ ws ~ (def ~ ws)+ ~ "}" }
 
-apg_file = { SOI ~ apg ~ EOI }
+define = { ident ~ ws ~ ":=" ~ ws ~ apg }
+
+plus = { ident ~ ws ~ ":=" ~ ws ~ ident ~ ws ~ "+" ~ ws ~ ident }
+
+stmt = _{ define | plus }
+
+apg_file = { SOI ~ ws? ~ (stmt ~ ws?)+ ~ EOI }
