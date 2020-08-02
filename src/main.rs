@@ -87,6 +87,9 @@ fn read_csv() -> std::io::Result<APG> {
 
 use std::fs;
 
+// use pest::iterators::Pair;
+// use apg::Value::Pair;
+
 fn main() {
     // let successful_parse = APGParser::parse(Rule::apg, "{ e1 = () :True [1] }");
     // println!("{:?}", successful_parse);
@@ -95,12 +98,17 @@ fn main() {
     let file = APGParser::parse(Rule::apg_file, &unparsed_file)
         .expect("unsuccessful parse") 
         .next().unwrap(); 
-    // println!("{:?}", file);
-    // let Pair { rule: r, span: s, inner: i } = file;
+
     for line in file.into_inner() {
         // println!("{:?}", line);
         for l in line.into_inner() {
-            println!("{:?}", l);
+            for l in l.into_inner() {
+                println!("Pair: {{");
+                println!("  {:?}", l.as_rule());
+                println!("  {:?}", l.as_span());
+                println!("  {:?}", l.into_inner());
+                println!("}}");
+            }
         }
     }
 
