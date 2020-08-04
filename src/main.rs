@@ -92,6 +92,14 @@ fn read_csv() -> std::io::Result<APG> {
     Ok(apg)
 }
 
+fn diamond(f: fn(), tp: Type) -> Type {
+    match tp {
+        Type::Prim => Type::Prim,
+        Type::Lbl(rc_lbl) => diamond(f, rc_lbl.clone()),
+        _ => unimplemented!(),
+    }
+}
+
 use std::fs;
 use std::collections::HashMap;
 
@@ -161,9 +169,15 @@ fn main() {
                 // symbol
                 let span = inner.next().unwrap().as_span();
                 let sym = span.as_str();     
-                
+                let span2 = inner.next().unwrap().as_span();
+                let sym2 = span2.as_str();     
+                let span3 = inner.next().unwrap().as_span();
+                let sym3 = span3.as_str();
+
                 // シンボルテーブルに入れる
-                symbols.insert(sym.to_string(), APGTerm::Plus(Box::new(APGTerm::Sym(sym.to_string())), Box::new(APGTerm::Sym("b".to_string()))));
+                let ope1 = Box::new(APGTerm::Sym(sym2.to_string()));
+                let ope2 = Box::new(APGTerm::Sym(sym3.to_string()));
+                symbols.insert(sym.to_string(), APGTerm::Plus(ope1, ope2));
             },
             _ => {
                 println!("others: {:?}", def);
