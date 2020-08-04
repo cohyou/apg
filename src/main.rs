@@ -86,36 +86,46 @@ fn read_csv() -> std::io::Result<APG> {
 }
 
 use std::fs;
+use std::collections::HashMap;
 
 fn main() {
     let unparsed_file = fs::read_to_string("src/_.apg").expect("cannot read file");
     let file = APGParser::parse(Rule::apg_file, &unparsed_file)
         .expect("unsuccessful parse") 
-        .next().unwrap(); 
+        .next().unwrap();
+
+    let mut symbols: HashMap<String, APG> = HashMap::new();
 
     for def in file.into_inner() {
-        if def.as_rule() == Rule::define {
-            let mut apg = APG::default();
-            for line in def.into_inner() {
+        match def.as_rule() {
+            Rule::define => {
+                let mut apg = APG::default();
+                let mut inner = def.into_inner();
+
+                // symbol
+                let span = inner.next().unwrap().as_span();
+                let sym = span.as_str();
+
+                // apg
+                let line = inner.next().unwrap();
                 for l in line.into_inner() {
-                    // println!("{:?}", "start");
                     let mut inner = l.into_inner();
         
                     // element
                     let span = inner.next().unwrap().as_span();
                     let element = span.as_str();
-                    // println!("{:?}", "element");
+
                     // value
                     let span = inner.next().unwrap().as_span();
                     let value = match span.as_str() {
                         "()" => Value::Unit,
                         _ => unimplemented!(),
                     };
-                    // println!("{:?}", "value");
+
                     // label
                     let span = inner.next().unwrap().as_span();
                     let label = span.as_str();
-                    // println!("{:?}", "label");
+
                     // type
                     let span = inner.next().unwrap().as_span();
                     let tp = match span.as_str() {
@@ -127,19 +137,33 @@ fn main() {
                         Value::Unit => Type::One,
                         _ => unimplemented!(),
                     };
-                    if tp == tp_from {
-                        // println!("ok");
-                        ;
-                    } else {
-                        println!("ng");
+                    if tp != tp_from {
+                        println!("NG");
                     }
-                    // println!("{:?}", "tp");
+
                     apg.add_lambda_upsilon(element, label, value);
                 }
-            }
-            println!("{:?}", apg);
+
+                // シンボルテーブルに入れる
+                symbols.insert(sym.to_string(), apg);
+            },
+            Rule::plus => {
+                let apg = APG::default();
+                let mut inner = def.into_inner();
+
+                // symbol
+                let span = inner.next().unwrap().as_span();
+                let sym = span.as_str();     
+                
+                // シンボルテーブルに入れる
+                symbols.insert(sym.to_string(), apg);
+            },
+            _ => {
+                println!("others: {:?}", def);
+            },
         }
     }
+    println!("{:?}", symbols);
     
     // let equalizer = eq();
     // println!("<EQ>\n{:?}", equalizer);
