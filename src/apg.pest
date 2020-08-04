@@ -17,6 +17,6 @@ define = { ident ~ ws ~ ":=" ~ ws ~ apg }
 
 plus = { ident ~ ws ~ ":=" ~ ws ~ ident ~ ws ~ "+" ~ ws ~ ident }
 
-stmt = _{ define | plus }
+term = _{ define | plus }
 
-apg_file = { SOI ~ ws? ~ (stmt ~ ws?)+ ~ EOI }
+apg_file = { SOI ~ ws? ~ (term ~ ws?)+ ~ EOI }

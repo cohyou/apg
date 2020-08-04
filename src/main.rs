@@ -11,6 +11,13 @@ pub struct APGParser;
 use std::rc::Rc;
 use apg::*;
 
+#[derive(Debug)]
+enum APGTerm {
+    Apg(APG),
+    Plus(Box<APGTerm>, Box<APGTerm>),
+    Sym(String),
+}
+
 #[allow(dead_code)]
 fn apg() -> APG {
     let mut apg = APG::default();
@@ -94,7 +101,7 @@ fn main() {
         .expect("unsuccessful parse") 
         .next().unwrap();
 
-    let mut symbols: HashMap<String, APG> = HashMap::new();
+    let mut symbols: HashMap<String, APGTerm> = HashMap::new();
 
     for def in file.into_inner() {
         match def.as_rule() {
@@ -145,7 +152,7 @@ fn main() {
                 }
 
                 // シンボルテーブルに入れる
-                symbols.insert(sym.to_string(), apg);
+                symbols.insert(sym.to_string(), APGTerm::Apg(apg));
             },
             Rule::plus => {
                 let apg = APG::default();
@@ -156,7 +163,7 @@ fn main() {
                 let sym = span.as_str();     
                 
                 // シンボルテーブルに入れる
-                symbols.insert(sym.to_string(), apg);
+                symbols.insert(sym.to_string(), APGTerm::Plus(Box::new(APGTerm::Sym(sym.to_string())), Box::new(APGTerm::Sym("b".to_string()))));
             },
             _ => {
                 println!("others: {:?}", def);
