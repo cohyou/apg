@@ -92,12 +92,19 @@ fn read_csv() -> std::io::Result<APG> {
     Ok(apg)
 }
 
-fn diamond(f: fn(), tp: Type) -> Type {
-    match tp {
-        Type::Prim => Type::Prim,
-        Type::Lbl(rc_lbl) => diamond(f, rc_lbl.clone()),
-        _ => unimplemented!(),
+fn diamond(f: fn(Rc<Label>) -> Rc<Type>, tp: Rc<Type>) -> Rc<Type> {
+    match tp.as_ref() {
+        Type::Prim |
+        Type::Zero | 
+        Type::One => tp,
+        Type::Lbl(rc_lbl) => f(rc_lbl.clone()),
+        Type::Sum(tp1, tp2) => Rc::new(Type::Sum(diamond(f, tp1.clone()), diamond(f, tp2.clone()))),
+        Type::Product(tp1, tp2) => Rc::new(Type::Product(diamond(f, tp1.clone()), diamond(f, tp2.clone()))),
     }
+}
+
+fn diamond_value(f: fn(Rc<Label>) -> Rc<Type>, g: fn(Rc<Element>) -> Rc<Value>, tp: Rc<Type>) -> (Rc<Type>, Rc<Value>) {
+    (Rc::new(Type::One), Rc::new(Value::Unit))
 }
 
 use std::fs;
