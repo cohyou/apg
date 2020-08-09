@@ -13,17 +13,21 @@ pub use label::Label;
 pub use r#type::Type;
 
 
+type Elements = HashSet<Rc<Element>>;
+type Labels = HashSet<Rc<Label>>;
+type LambdaUpsilon = HashMap<String, (String, Rc<Value>)>;
+
 pub struct APG {
-    elements: HashSet<Rc<Element>>,
-    values: HashSet<Rc<Value>>,    
-    labels: HashSet<Rc<Label>>,
-    lambda_upsilon: HashMap<String, (String, Rc<Value>)>,
+    pub elements: Elements,
+    // values: HashSet<Rc<Value>>,    
+    pub labels: Labels,
+    lambda_upsilon: LambdaUpsilon,
 }
 
 impl fmt::Debug for APG {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let _ = writeln!(f, "elements: {:?}", self.elements);
-        let _ = writeln!(f, "values:   {:?}", self.values);
+        // let _ = writeln!(f, "values:   {:?}", self.values);
         let _ = writeln!(f, "labels:   {:?}", self.labels);
         writeln!(f, "lambda_upsilon: {:?}", self.lambda_upsilon)
     }
@@ -31,13 +35,15 @@ impl fmt::Debug for APG {
 
 #[allow(dead_code)]
 impl APG {
-    fn zero() -> APG {
+    pub fn new(elements: Elements, labels: Labels, lambda_upsilon: LambdaUpsilon) -> APG {
         APG {
-            elements: HashSet::default(),
-            values: HashSet::default(),
-            labels: HashSet::default(),
-            lambda_upsilon: HashMap::default(),
+            elements: elements,
+            labels: labels,
+            lambda_upsilon: lambda_upsilon,
         }
+    }
+    fn zero() -> APG {
+        APG::new(HashSet::default(), HashSet::default(), HashMap::default())
     }
 
     pub fn add_element(&mut self, name: &str) {
@@ -55,31 +61,31 @@ impl APG {
         None
     }
 
-    pub fn add_value(&mut self, v: Value) {
-        let v = Rc::new(v);
-        self.values.insert(v.clone());
-    }
+    // pub fn add_value(&mut self, v: Value) {
+    //     let v = Rc::new(v);
+    //     self.values.insert(v.clone());
+    // }
     
     fn add_element_value(&mut self, element_name: &str) {
         let v = Value::Id(self.get_element(element_name).unwrap());
-        self.add_value(v);
+        // self.add_value(v);
     }
 
-    pub fn get_element_value(&self, element_name: &str) -> Option<Rc<Value>> {
-        for value in self.values.iter() {            
-            if let Value::Id(elem) = value.as_ref() {    
-                if elem.0 == element_name {
-                    return Some(value.clone());
-                }
-            }            
-        }
+    // pub fn get_element_value(&self, element_name: &str) -> Option<Rc<Value>> {
+    //     for value in self.values.iter() {            
+    //         if let Value::Id(elem) = value.as_ref() {    
+    //             if elem.0 == element_name {
+    //                 return Some(value.clone());
+    //             }
+    //         }            
+    //     }
 
-        None        
-    }
+    //     None        
+    // }
 
-    fn add_pair_value(&mut self, v1: Rc<Value>, v2: Rc<Value>) {
-        self.add_value(Value::Pair(v1, v2));
-    }
+    // fn add_pair_value(&mut self, v1: Rc<Value>, v2: Rc<Value>) {
+    //     self.add_value(Value::Pair(v1, v2));
+    // }
 
     pub fn add_label(&mut self, name: &str) {
         let lbl = Label(name.to_string());
@@ -101,7 +107,7 @@ impl APG {
         self.add_element_value(e);
         self.add_label(l);
         let v_rc = Rc::new(v);
-        self.values.insert(v_rc.clone());
+        // self.values.insert(v_rc.clone());
         self.lambda_upsilon.insert(e.to_string(), (l.to_string(), v_rc.clone()));
     }
 
@@ -114,11 +120,11 @@ impl APG {
             .collect()
     }
 
-    fn filter_values<P>(&self, pred: P) -> HashSet<Rc<Value>>
-        where P: for<'r> FnMut(&'r Rc<Value>) -> bool
-    {
-        self.values.iter().cloned().filter(pred).collect()
-    }
+    // fn filter_values<P>(&self, pred: P) -> HashSet<Rc<Value>>
+    //     where P: for<'r> FnMut(&'r Rc<Value>) -> bool
+    // {
+    //     self.values.iter().cloned().filter(pred).collect()
+    // }
 
     fn filter_elements<P>(&self, pred: P) -> HashSet<Rc<Element>>
         where P: for<'r> FnMut(&'r Rc<Element>) -> bool
@@ -131,7 +137,7 @@ impl Default for APG {
     fn default() -> APG {
         APG {
             elements: HashSet::default(),
-            values: HashSet::default(), 
+            // values: HashSet::default(), 
             labels: HashSet::default(),
             lambda_upsilon: HashMap::default(),
         }
@@ -162,7 +168,7 @@ pub fn get_equalizer(h: &APGMorphism, k: &APGMorphism) -> APG {
         elements: h.from.filter_elements(|e| {
             (h.elem_mapping)(e.clone()) == (k.elem_mapping)(e.clone())
         }),
-        values: h.from.filter_values(|_a| true),
+        // values: h.from.filter_values(|_a| true),
         labels: h.from.filter_labels_by_element(|e| {
             (h.elem_mapping)(e.clone()) == (k.elem_mapping)(e.clone())
         }),

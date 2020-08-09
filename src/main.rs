@@ -103,15 +103,61 @@ fn diamond(f: fn(Rc<Label>) -> Rc<Type>, tp: Rc<Type>) -> Rc<Type> {
     }
 }
 
-fn diamond_value(f: fn(Rc<Label>) -> Rc<Type>, g: fn(Rc<Element>) -> Rc<Value>, tp: Rc<Type>) -> (Rc<Type>, Rc<Value>) {
-    (Rc::new(Type::One), Rc::new(Value::Unit))
+type F = fn(Rc<Label>) -> Rc<Type>;
+type G = fn(Rc<Element>) -> Rc<Value>;
+type TV = (Rc<Type>, Rc<Value>);
+
+fn diamond_value(f: F, g: G, tp_val: TV) -> TV {
+    let (tp, val) = tp_val;
+    match (tp.as_ref(), val.as_ref()) {
+        (Type::One, Value::Unit) => (Rc::new(Type::One), Rc::new(Value::Unit)),
+        (Type::Prim, _) => (Rc::new(Type::Prim), val.clone()),
+        (Type::Lbl(lbl), Value::Id(elem)) => (f((*lbl).clone()), g((*elem).clone())),
+        (Type::Sum(tp1, _tp2), Value::Inl(v, vtp2)) => {
+            (
+                diamond(f, tp.clone()), 
+                Rc::new(Value::Inl(
+                    diamond_value(f, g, (diamond(f, (*tp1).clone()), (*v).clone())).1,
+                    diamond(f, (*vtp2).clone())
+                ))
+            )
+        },
+        (Type::Sum(_tp1, tp2), Value::Inr(vtp1, v)) => {
+            (
+                diamond(f, tp.clone()), 
+                Rc::new(Value::Inr(
+                    diamond(f, (*vtp1).clone()),
+                    diamond_value(f, g, (diamond(f, (*tp2).clone()), (*v).clone())).1
+                ))
+            )
+        },
+        (Type::Product(tp1, tp2), Value::Pair(v1, v2)) => {
+            (
+                diamond(f, tp.clone()),
+                Rc::new(Value::Pair(
+                    diamond_value(f, g, ((*tp1).clone(), (*v1).clone())).1,
+                    diamond_value(f, g, ((*tp2).clone(), (*v2).clone())).1
+                )),
+            )
+        },
+        _ => unimplemented!(),
+    }
+    
+}
+
+fn sum_apgs(apg1: APG, apg2: APG) -> APG {
+    let labels = &apg1.labels | &apg2.labels;
+    let elements = &apg1.elements | &apg2.elements;
+    let lambda_upsilon = HashMap::new();
+    APG::new(elements, labels, lambda_upsilon)
 }
 
 use std::fs;
 use std::collections::HashMap;
 
 fn main() {
-    let unparsed_file = fs::read_to_string("src/_.apg").expect("cannot read file");
+    let unparsed_file = fs::read_to_string("src/_.apg")
+        .expect("cannot read file");
     let file = APGParser::parse(Rule::apg_file, &unparsed_file)
         .expect("unsuccessful parse") 
         .next().unwrap();
