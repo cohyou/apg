@@ -18,18 +18,18 @@ enum APGTerm {
     Sym(String),
 }
 
-#[allow(dead_code)]
-fn apg() -> APG {
-    let mut apg = APG::default();
+// #[allow(dead_code)]
+// fn apg() -> APG {
+//     let mut apg = APG::default();
 
-    // set up
-    add!(apg[v1: Person]);
-    add!(apg[v2: Person]);
-    let ev1 = ev!(apg, v1);
-    let ev2 = ev!(apg, v2);
-    add!(apg[e1: knows<ev1 * ev2>]);
-    apg
-}
+//     // set up
+//     add!(apg[v1: Person]);
+//     add!(apg[v2: Person]);
+//     let ev1 = ev!(apg, v1);
+//     let ev2 = ev!(apg, v2);
+//     add!(apg[e1: knows<ev1 * ev2>]);
+//     apg
+// }
 
 #[allow(dead_code)]
 fn eq() -> APG {
@@ -57,40 +57,40 @@ fn eq() -> APG {
     get_equalizer(&mor1, &mor2)
 }
 
-fn read_csv() -> std::io::Result<APG> {
-    use std::io::{BufRead, BufReader};
-    use std::fs::File;
+// fn read_csv() -> std::io::Result<APG> {
+//     use std::io::{BufRead, BufReader};
+//     use std::fs::File;
 
-    let f = File::open("data/seven_heroes.csv")?;
-    let reader = BufReader::new(f);
+//     let f = File::open("data/seven_heroes.csv")?;
+//     let reader = BufReader::new(f);
 
-    let mut apg = APG::default();
-    let mut titles = vec![];    
-    for line in reader.lines() {
-        if let Ok(l) = line {
-            let l_ref = &l;
-            if titles.is_empty() {
-                for col in l_ref.split(",") {                    
-                    titles.push(col.to_owned());
-                }
-            } else {
+//     let mut apg = APG::default();
+//     let mut titles = vec![];    
+//     for line in reader.lines() {
+//         if let Ok(l) = line {
+//             let l_ref = &l;
+//             if titles.is_empty() {
+//                 for col in l_ref.split(",") {                    
+//                     titles.push(col.to_owned());
+//                 }
+//             } else {
                 
-                let cols: Vec<_> = l_ref.split(",").collect();
-                apg.add_lambda_upsilon(&cols[0].to_owned(), &titles[0], Value::Unit);
-                apg.add_lambda_upsilon(&cols[1].to_owned(), &titles[1], Value::Unit);
+//                 let cols: Vec<_> = l_ref.split(",").collect();
+//                 apg.add_lambda_upsilon(&cols[0].to_owned(), &titles[0], Value::Unit);
+//                 apg.add_lambda_upsilon(&cols[1].to_owned(), &titles[1], Value::Unit);
 
-                let ev1 = apg.get_element_value(&cols[0]).unwrap();
-                let ev2 = apg.get_element_value(&cols[1]).unwrap();
-                // add!(apg[e1: originated<ev1 * ev2>]);                            
-                apg.add_lambda_upsilon(&(cols[0].to_owned() + "行"), "originated", Value::Pair(ev1, ev2));
-            }
-        }
-    }
+//                 let ev1 = apg.get_element_value(&cols[0]).unwrap();
+//                 let ev2 = apg.get_element_value(&cols[1]).unwrap();
+//                 // add!(apg[e1: originated<ev1 * ev2>]);                            
+//                 apg.add_lambda_upsilon(&(cols[0].to_owned() + "行"), "originated", Value::Pair(ev1, ev2));
+//             }
+//         }
+//     }
 
-    println!("{:?}", apg);
+//     println!("{:?}", apg);
 
-    Ok(apg)
-}
+//     Ok(apg)
+// }
 
 fn diamond(f: fn(Rc<Label>) -> Rc<Type>, tp: Rc<Type>) -> Rc<Type> {
     match tp.as_ref() {
@@ -145,11 +145,52 @@ fn diamond_value(f: F, g: G, tp_val: TV) -> TV {
     
 }
 
-fn sum_apgs(apg1: APG, apg2: APG) -> APG {
-    let labels = &apg1.labels | &apg2.labels;
-    let elements = &apg1.elements | &apg2.elements;
-    let lambda_upsilon = HashMap::new();
-    APG::new(elements, labels, lambda_upsilon)
+use std::collections::HashSet;
+fn add_prefix_to_labels(labels: &HashSet<Rc<Label>>, prefix: &str) -> HashSet<Rc<Label>> {
+    labels.iter()
+        .map(|e| Rc::new(Label(prefix.to_string() + &e.as_ref().0)))
+        .collect()
+}
+
+fn add_prefix_to_elements(elements: &HashSet<Rc<Element>>, prefix: &str) -> HashSet<Rc<Element>> {
+    elements.iter()
+        .map(|e| Rc::new(Element(prefix.to_string() + &e.as_ref().0)))
+        .collect()
+}
+
+fn replace_value(lambda_upsilon: &HashMap<String, (String, Rc<Value>)>, prefix: &str)
+-> HashMap<String, (String, Rc<Value>)> {
+    lambda_upsilon.iter()
+        // .inspect(|(k, v)| println!("replace_value: {:?} {:?}", k, v))
+        .map(|(k, v)| {
+            let new_key_sym = prefix.to_string() + k;
+            let new_label_sym = prefix.to_string() + v.0.as_ref();
+            match v.1.as_ref() {
+                Value::Id(rc_element) => {
+                    
+                    let new_sym = prefix.to_string() + &rc_element.as_ref().0;
+                    (new_key_sym, (new_label_sym, Rc::new(Value::Id(Rc::new(Element(new_sym))))))
+                },
+                _ => (new_key_sym, (new_label_sym, v.1.clone())),
+            }
+        })
+        .collect::<HashMap<String, (String, Rc<Value>)>>()
+}
+
+fn sum_apgs(apg1: &APG, apg2: &APG) -> APG {
+    let a = add_prefix_to_labels(&apg1.labels, "A.");
+    let b = add_prefix_to_labels(&apg2.labels, "B.");
+    let labels = &a | &b;
+
+    let a_elements = add_prefix_to_elements(&apg1.elements, "A.");
+    let b_elements = add_prefix_to_elements(&apg2.elements, "B.");
+    let elements = &a_elements | &b_elements;
+
+    let mut a_f = replace_value(&apg1.lambda_upsilon, "A.");
+    let b_f = replace_value(&apg2.lambda_upsilon, "B.");
+
+    a_f.extend(b_f);
+    APG::new(elements, labels, a_f)
 }
 
 use std::fs;
@@ -233,12 +274,15 @@ fn main() {
                 symbols.insert(sym.to_string(), APGTerm::Plus(ope1, ope2));
             },
             _ => {
-                println!("others: {:?}", def);
+                // println!("others: {:?}", def);
             },
         }
     }
     println!("{:?}", symbols);
+    if let APGTerm::Apg(apg1) = symbols.get("a").unwrap() {
+        if let APGTerm::Apg(apg2) = symbols.get("b").unwrap() {
+            println!("co-product: \n{:?}", sum_apgs(apg1, apg2));
+        }
+    }
     
-    // let equalizer = eq();
-    // println!("<EQ>\n{:?}", equalizer);
 }

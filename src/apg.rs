@@ -14,14 +14,14 @@ pub use r#type::Type;
 
 
 type Elements = HashSet<Rc<Element>>;
-type Labels = HashSet<Rc<Label>>;
+pub type Labels = HashSet<Rc<Label>>;
 type LambdaUpsilon = HashMap<String, (String, Rc<Value>)>;
 
 pub struct APG {
     pub elements: Elements,
     // values: HashSet<Rc<Value>>,    
     pub labels: Labels,
-    lambda_upsilon: LambdaUpsilon,
+    pub lambda_upsilon: LambdaUpsilon,
 }
 
 impl fmt::Debug for APG {
