@@ -50,13 +50,13 @@ impl APG {
     }
 
     pub fn add_element(&mut self, name: &str) {
-        let element = Element::E(name.to_string());
+        let element = Element(name.to_string());
         self.elements.insert(Rc::new(element));
     }
 
     fn get_element(&self, name: &str) -> Option<Rc<Element>> {
         for element in self.elements.iter() {       
-            if let Element::E(e_name) = element.as_ref() {
+            if let Element(e_name) = element.as_ref() {
                 if e_name == name {
                     return Some(element.clone());
                 } 
@@ -122,7 +122,7 @@ impl APG {
         self.elements.iter().cloned()
             .filter(pred)
             .map(|e| {
-                if let Element::E(e_name) = e.as_ref() {
+                if let Element(e_name) = e.as_ref() {
                     Rc::new(Label(self.lambda_upsilon[e_name].0.clone()))
                 } else {
                     unimplemented!()

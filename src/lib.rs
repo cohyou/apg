@@ -61,6 +61,6 @@ macro_rules! inr {
 #[macro_export]
 macro_rules! elem {
     ($n:ident) => {
-        Rc::new(Element::E(stringify!($n).to_string()))
+        Rc::new(Element(stringify!($n).to_string()))
     };
 }

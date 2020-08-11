@@ -164,8 +164,8 @@ fn add_prefix_to_labels(labels: &HashSet<Rc<Label>>, prefix: &str) -> HashSet<Rc
 fn add_prefix_to_elements(elements: &HashSet<Rc<Element>>, prefix: &str) -> HashSet<Rc<Element>> {
     elements.iter()
         .map(|e| {
-            if let Element::E(e_name) = e.as_ref() {
-                Rc::new(Element::E(prefix.to_string() + e_name))
+            if let Element(e_name) = e.as_ref() {
+                Rc::new(Element(prefix.to_string() + e_name))
             } else {
                 unimplemented!()
             }
@@ -182,9 +182,9 @@ fn replace_value(lambda_upsilon: &HashMap<String, (String, Rc<Value>)>, prefix: 
             let new_label_sym = prefix.to_string() + v.0.as_ref();
             match v.1.as_ref() {
                 Value::Id(rc_element) => {
-                    if let Element::E(e_name) = rc_element.as_ref() {
+                    if let Element(e_name) = rc_element.as_ref() {
                         let new_sym = prefix.to_string() + e_name;
-                        (new_key_sym, (new_label_sym, Rc::new(Value::Id(Rc::new(Element::E(new_sym))))))
+                        (new_key_sym, (new_label_sym, Rc::new(Value::Id(Rc::new(Element(new_sym))))))
                     } else {
                         unimplemented!()
                     }
@@ -226,11 +226,11 @@ fn product_of_apgs(apg1: &APG, apg2: &APG) -> APG {
     }
     let mut new_elements: HashSet<Rc<Element>> = HashSet::new();
     for l1 in &apg1.elements {
-        if let Element::E(e_name1) = l1.as_ref() {
+        if let Element(e_name1) = l1.as_ref() {
             for l2 in &apg2.elements {
-                if let Element::E(e_name2) = l2.as_ref() {
+                if let Element(e_name2) = l2.as_ref() {
                     let new_element = format!("{}*{}", e_name1, e_name2);
-                    new_elements.insert(Rc::new(Element::E(new_element)));
+                    new_elements.insert(Rc::new(Element(new_element)));
                 }
             }
         }
@@ -328,11 +328,11 @@ fn main() {
 
     let mut iter = symbols.iter().filter(|e| e.1.is_apg());
     if let APGTerm::Apg(apg1) = iter.next().unwrap().1 {
-        println!("age1:\n{:?}", apg1);
+        // println!("age1:\n{:?}", apg1);
         if let APGTerm::Apg(apg2) = iter.next().unwrap().1 {
-            println!("age2:\n{:?}", apg2);
-            println!("co-product:\n{:?}", co_product_of_apgs(apg1, apg2));
-            println!("product:\n{:?}", product_of_apgs(apg1, apg2));
+            // println!("age2:\n{:?}", apg2);
+            // println!("co-product:\n{:?}", co_product_of_apgs(apg1, apg2));
+            // println!("product:\n{:?}", product_of_apgs(apg1, apg2));
             
         }
     }
