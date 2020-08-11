@@ -18,6 +18,15 @@ enum APGTerm {
     Sym(String),
 }
 
+impl APGTerm {
+    pub fn is_apg(&self) -> bool {
+        match self {
+            APGTerm::Apg(_) => true,
+            _ => false,
+        }
+    }
+}
+
 // #[allow(dead_code)]
 // fn apg() -> APG {
 //     let mut apg = APG::default();
@@ -154,7 +163,13 @@ fn add_prefix_to_labels(labels: &HashSet<Rc<Label>>, prefix: &str) -> HashSet<Rc
 
 fn add_prefix_to_elements(elements: &HashSet<Rc<Element>>, prefix: &str) -> HashSet<Rc<Element>> {
     elements.iter()
-        .map(|e| Rc::new(Element(prefix.to_string() + &e.as_ref().0)))
+        .map(|e| {
+            if let Element::E(e_name) = e.as_ref() {
+                Rc::new(Element::E(prefix.to_string() + e_name))
+            } else {
+                unimplemented!()
+            }
+        })
         .collect()
 }
 
@@ -167,9 +182,12 @@ fn replace_value(lambda_upsilon: &HashMap<String, (String, Rc<Value>)>, prefix: 
             let new_label_sym = prefix.to_string() + v.0.as_ref();
             match v.1.as_ref() {
                 Value::Id(rc_element) => {
-                    
-                    let new_sym = prefix.to_string() + &rc_element.as_ref().0;
-                    (new_key_sym, (new_label_sym, Rc::new(Value::Id(Rc::new(Element(new_sym))))))
+                    if let Element::E(e_name) = rc_element.as_ref() {
+                        let new_sym = prefix.to_string() + e_name;
+                        (new_key_sym, (new_label_sym, Rc::new(Value::Id(Rc::new(Element::E(new_sym))))))
+                    } else {
+                        unimplemented!()
+                    }
                 },
                 _ => (new_key_sym, (new_label_sym, v.1.clone())),
             }
@@ -177,20 +195,47 @@ fn replace_value(lambda_upsilon: &HashMap<String, (String, Rc<Value>)>, prefix: 
         .collect::<HashMap<String, (String, Rc<Value>)>>()
 }
 
-fn sum_apgs(apg1: &APG, apg2: &APG) -> APG {
-    let a = add_prefix_to_labels(&apg1.labels, "A.");
-    let b = add_prefix_to_labels(&apg2.labels, "B.");
+fn co_product_of_apgs(apg1: &APG, apg2: &APG) -> APG {
+    let prefix1 = apg1.name.clone() + ".";
+    let prefix2 = apg2.name.clone() + ".";
+
+    let a = add_prefix_to_labels(&apg1.labels, &prefix1);
+    let b = add_prefix_to_labels(&apg2.labels, &prefix2);
     let labels = &a | &b;
 
-    let a_elements = add_prefix_to_elements(&apg1.elements, "A.");
-    let b_elements = add_prefix_to_elements(&apg2.elements, "B.");
+    let a_elements = add_prefix_to_elements(&apg1.elements, &prefix1);
+    let b_elements = add_prefix_to_elements(&apg2.elements, &prefix2);
     let elements = &a_elements | &b_elements;
 
-    let mut a_f = replace_value(&apg1.lambda_upsilon, "A.");
-    let b_f = replace_value(&apg2.lambda_upsilon, "B.");
+    let mut a_f = replace_value(&apg1.lambda_upsilon, &prefix1);
+    let b_f = replace_value(&apg2.lambda_upsilon, &prefix2);
 
     a_f.extend(b_f);
-    APG::new(elements, labels, a_f)
+
+    let new_name = prefix1.clone() + &prefix2;
+    APG::new(&new_name, elements, labels, a_f)
+}
+
+fn product_of_apgs(apg1: &APG, apg2: &APG) -> APG {
+    let mut new_labels: HashSet<Rc<Label>> = HashSet::new();
+    for l1 in &apg1.labels {
+        for l2 in &apg2.labels {
+            let new_label = format!("{}*{}", l1.0, l2.0);
+            new_labels.insert(Rc::new(Label(new_label)));
+        }
+    }
+    let mut new_elements: HashSet<Rc<Element>> = HashSet::new();
+    for l1 in &apg1.elements {
+        if let Element::E(e_name1) = l1.as_ref() {
+            for l2 in &apg2.elements {
+                if let Element::E(e_name2) = l2.as_ref() {
+                    let new_element = format!("{}*{}", e_name1, e_name2);
+                    new_elements.insert(Rc::new(Element::E(new_element)));
+                }
+            }
+        }
+    }
+    APG::new(&(apg1.name.clone() + &apg2.name), new_elements, new_labels, HashMap::new())
 }
 
 use std::fs;
@@ -208,12 +253,13 @@ fn main() {
     for def in file.into_inner() {
         match def.as_rule() {
             Rule::define => {
-                let mut apg = APG::default();
                 let mut inner = def.into_inner();
+                let mut apg = APG::default();
 
                 // symbol
                 let span = inner.next().unwrap().as_span();
                 let sym = span.as_str();
+                apg.name = sym.to_string();
 
                 // apg
                 let line = inner.next().unwrap();
@@ -278,11 +324,16 @@ fn main() {
             },
         }
     }
-    println!("{:?}", symbols);
-    if let APGTerm::Apg(apg1) = symbols.get("a").unwrap() {
-        if let APGTerm::Apg(apg2) = symbols.get("b").unwrap() {
-            println!("co-product: \n{:?}", sum_apgs(apg1, apg2));
+    // println!("{:?}", symbols);
+
+    let mut iter = symbols.iter().filter(|e| e.1.is_apg());
+    if let APGTerm::Apg(apg1) = iter.next().unwrap().1 {
+        println!("age1:\n{:?}", apg1);
+        if let APGTerm::Apg(apg2) = iter.next().unwrap().1 {
+            println!("age2:\n{:?}", apg2);
+            println!("co-product:\n{:?}", co_product_of_apgs(apg1, apg2));
+            println!("product:\n{:?}", product_of_apgs(apg1, apg2));
+            
         }
     }
-    
 }

@@ -18,6 +18,7 @@ pub type Labels = HashSet<Rc<Label>>;
 type LambdaUpsilon = HashMap<String, (String, Rc<Value>)>;
 
 pub struct APG {
+    pub name: String,
     pub elements: Elements,
     // values: HashSet<Rc<Value>>,    
     pub labels: Labels,
@@ -26,6 +27,7 @@ pub struct APG {
 
 impl fmt::Debug for APG {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let _ = writeln!(f, "[{}]", self.name);
         let _ = writeln!(f, "elements: {:?}", self.elements);
         // let _ = writeln!(f, "values:   {:?}", self.values);
         let _ = writeln!(f, "labels:   {:?}", self.labels);
@@ -35,27 +37,30 @@ impl fmt::Debug for APG {
 
 #[allow(dead_code)]
 impl APG {
-    pub fn new(elements: Elements, labels: Labels, lambda_upsilon: LambdaUpsilon) -> APG {
+    pub fn new(name: &str, elements: Elements, labels: Labels, lambda_upsilon: LambdaUpsilon) -> APG {
         APG {
+            name: name.to_string(),
             elements: elements,
             labels: labels,
             lambda_upsilon: lambda_upsilon,
         }
     }
     fn zero() -> APG {
-        APG::new(HashSet::default(), HashSet::default(), HashMap::default())
+        APG::new("", HashSet::default(), HashSet::default(), HashMap::default())
     }
 
     pub fn add_element(&mut self, name: &str) {
-        let element = Element(name.to_string());
+        let element = Element::E(name.to_string());
         self.elements.insert(Rc::new(element));
     }
 
     fn get_element(&self, name: &str) -> Option<Rc<Element>> {
-        for element in self.elements.iter() {            
-            if element.0 == name {
-                return Some(element.clone());
-            }            
+        for element in self.elements.iter() {       
+            if let Element::E(e_name) = element.as_ref() {
+                if e_name == name {
+                    return Some(element.clone());
+                } 
+            }   
         }
 
         None
@@ -116,7 +121,13 @@ impl APG {
     {
         self.elements.iter().cloned()
             .filter(pred)
-            .map(|e| Rc::new(Label(self.lambda_upsilon[&e.as_ref().0].0.clone())))
+            .map(|e| {
+                if let Element::E(e_name) = e.as_ref() {
+                    Rc::new(Label(self.lambda_upsilon[e_name].0.clone()))
+                } else {
+                    unimplemented!()
+                }
+            })
             .collect()
     }
 
@@ -136,6 +147,7 @@ impl APG {
 impl Default for APG {
     fn default() -> APG {
         APG {
+            name: "".to_string(),
             elements: HashSet::default(),
             // values: HashSet::default(), 
             labels: HashSet::default(),
@@ -165,6 +177,7 @@ impl APGMorphism {
 
 pub fn get_equalizer(h: &APGMorphism, k: &APGMorphism) -> APG {
     APG {
+        name: "".to_string(),
         elements: h.from.filter_elements(|e| {
             (h.elem_mapping)(e.clone()) == (k.elem_mapping)(e.clone())
         }),

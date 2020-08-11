@@ -1,10 +1,10 @@
-a := {
+Bool := {
     e1 = () :True [1]
     e2 = () :False [1]
 }
-b := {
+Size := {
     e3 = () :Small [1]
     e4 = () :Medium [1]
     e5 = () :Large [1]
 }
-c := a + b
+c := Bool + Size
