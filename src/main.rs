@@ -31,22 +31,53 @@ fn make_named_one(name: &str) -> APG {
     let mut labels = HashSet::new();
     labels.insert(Rc::new(Label::default()));
     let mut lambda_upsilon1 = HashMap::new();
-    lambda_upsilon1.insert(vec![vec![]], (vec![vec![]], Rc::new(Value::Unit)));
+    lambda_upsilon1.insert(vec![], (vec![], Rc::new(Value::Unit)));
     APG::new(name, elements, labels, lambda_upsilon1)
 }
 
 fn product_of_apgs(apg1: &APG, apg2: &APG) -> APG {
-    let mut new_labels: HashSet<Rc<Label>> = (&apg1.labels).clone();
-    new_labels.extend((&apg2.labels).clone());
+    let mut new_labels: HashSet<Rc<Label>> = change_labels(&apg1.labels, &apg1.name);
+    new_labels.extend(change_labels(&apg2.labels, &apg2.name));
 
-    let mut new_elements: HashSet<Rc<Element>> = (&apg1.elements).clone();
-    new_elements.extend((&apg2.elements).clone());
+    let mut new_elements: HashSet<Rc<Element>> = change_elements(&apg1.elements, &apg1.name);
+    new_elements.extend(change_elements(&apg2.elements, &apg2.name));
 
-    let mut new_lambda_upsilon = (&apg1.lambda_upsilon).clone();
-    new_lambda_upsilon.extend((&apg2.lambda_upsilon).clone());
+    let mut new_lambda_upsilon = change_lambda_upsilon(&apg1.lambda_upsilon, &apg1.name);
+    new_lambda_upsilon.extend(change_lambda_upsilon(&apg2.lambda_upsilon, &apg2.name));
 
     let new_name = format!("{}*{}", apg1.name, apg2.name);
     APG::new(&new_name, new_elements, new_labels, new_lambda_upsilon)
+}
+
+fn change_labels(labels: &HashSet<Rc<Label>>, name: &str) -> HashSet<Rc<Label>> {
+    if labels.contains(&Label(vec![])) {
+        let mut res = HashSet::new();
+        res.insert(Rc::new(Label(vec![vec![name.to_string()]])));
+        res
+    } else {
+        labels.clone()
+    }
+}
+
+fn change_elements(labels: &HashSet<Rc<Element>>, name: &str) -> HashSet<Rc<Element>> {
+    if labels.contains(&Element(vec![])) {
+        let mut res = HashSet::new();
+        res.insert(Rc::new(Element(vec![vec![name.to_string()]])));
+        res
+    } else {
+        labels.clone()
+    }
+}
+
+type LambdaUpsilon = HashMap<Vec<Vec<String>>, (Vec<Vec<String>>, Rc<Value>)>;
+fn change_lambda_upsilon(lambda_upsilon: &LambdaUpsilon, name: &str) -> LambdaUpsilon {
+    if lambda_upsilon.len() == 1 && lambda_upsilon[&vec![]].0.len() == 0 {
+        let mut res = HashMap::new();
+        res.insert(vec![vec![name.to_string()]], (vec![vec![name.to_string()]], Rc::new(Value::Unit)));
+        res
+    } else {
+        lambda_upsilon.clone()
+    }
 }
 
 // fn add_prefix_to_labels(labels: &HashSet<Rc<Label>>, prefix: &str) -> HashSet<Rc<Label>> {
