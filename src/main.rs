@@ -22,7 +22,14 @@ fn main() {
 fn test_product() {
     let apg1 = make_named_one("false");
     let apg2 = make_named_one("true");
-    println!("{:?}", product_of_apgs(&apg1, &apg2));
+    let apg3 = product_of_apgs(&apg1, &apg2);
+    println!("{:?}", apg3);
+
+    let apg4 = make_named_one("small");
+    let apg5 = make_named_one("medium");
+    let apg6 = make_named_one("large");
+    let apg7 = product_of_apgs(&product_of_apgs(&apg4, &apg5), &apg6);
+    println!("{:?}", apg7);
 }
 
 fn make_named_one(name: &str) -> APG {
@@ -36,10 +43,10 @@ fn make_named_one(name: &str) -> APG {
 }
 
 fn product_of_apgs(apg1: &APG, apg2: &APG) -> APG {
-    let mut new_labels: HashSet<Rc<Label>> = change_labels(&apg1.labels, &apg1.name);
+    let mut new_labels = change_labels(&apg1.labels, &apg1.name);
     new_labels.extend(change_labels(&apg2.labels, &apg2.name));
 
-    let mut new_elements: HashSet<Rc<Element>> = change_elements(&apg1.elements, &apg1.name);
+    let mut new_elements = change_elements(&apg1.elements, &apg1.name);
     new_elements.extend(change_elements(&apg2.elements, &apg2.name));
 
     let mut new_lambda_upsilon = change_lambda_upsilon(&apg1.lambda_upsilon, &apg1.name);
