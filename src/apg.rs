@@ -15,7 +15,7 @@ pub use r#type::Type;
 
 type Elements = HashSet<Rc<Element>>;
 pub type Labels = HashSet<Rc<Label>>;
-type LambdaUpsilon = HashMap<Vec<Vec<String>>, (Vec<Vec<String>>, Rc<Value>)>;
+type LambdaUpsilon = HashMap<Rc<Element>, (Rc<Label>, Rc<Value>)>;
 
 pub struct APG {
     pub name: String,

@@ -34,11 +34,13 @@ fn test_product() {
 
 fn make_named_one(name: &str) -> APG {
     let mut elements = HashSet::new();
-    elements.insert(Rc::new(Element::default()));
+    let e = Rc::new(Element::default());
+    elements.insert(e.clone());
     let mut labels = HashSet::new();
-    labels.insert(Rc::new(Label::default()));
+    let l = Rc::new(Label::default());
+    labels.insert(l.clone());
     let mut lambda_upsilon1 = HashMap::new();
-    lambda_upsilon1.insert(vec![], (vec![], Rc::new(Value::Unit)));
+    lambda_upsilon1.insert(e.clone(), (l.clone(), Rc::new(Value::Unit)));
     APG::new(name, elements, labels, lambda_upsilon1)
 }
 
@@ -94,11 +96,14 @@ fn change_elements(labels: &HashSet<Rc<Element>>, name: &str) -> HashSet<Rc<Elem
     }
 }
 
-type LambdaUpsilon = HashMap<Vec<Vec<String>>, (Vec<Vec<String>>, Rc<Value>)>;
+type LambdaUpsilon = HashMap<Rc<Element>, (Rc<Label>, Rc<Value>)>;
 fn change_lambda_upsilon(lambda_upsilon: &LambdaUpsilon, name: &str) -> LambdaUpsilon {
-    if lambda_upsilon.len() == 1 && lambda_upsilon[&vec![]].0.len() == 0 {
+    if lambda_upsilon.len() == 1 && 
+    lambda_upsilon[&Element::default()].0.as_ref() == &Label::default() {
         let mut res = HashMap::new();
-        res.insert(vec![vec![name.to_string()]], (vec![vec![name.to_string()]], Rc::new(Value::Unit)));
+        let new_element = Element(vec![vec![name.to_string()]]);
+        let new_label = Label(vec![vec![name.to_string()]]);
+        res.insert(Rc::new(new_element), (Rc::new(new_label), Rc::new(Value::Unit)));
         res
     } else {
         lambda_upsilon.clone()
