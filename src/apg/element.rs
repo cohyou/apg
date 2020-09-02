@@ -5,10 +5,10 @@ pub struct Element(pub Vec<Vec<String>>);
 
 impl fmt::Debug for Element {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "E");
+        write!(f, "E'");
         for (i, multiply) in self.0.iter().enumerate() {
             for (j, plus) in multiply.iter().enumerate() {
-                write!(f, "{:?}", plus);
+                write!(f, "{}", plus);
                 if j < multiply.len() - 1 {
                     write!(f, ".");
                 }
@@ -17,6 +17,6 @@ impl fmt::Debug for Element {
                 write!(f, "*");
             }
         }
-        write!(f, "")
+        write!(f, "'")
     }
 }

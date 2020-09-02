@@ -5,10 +5,10 @@ pub struct Label(pub Vec<Vec<String>>);
 
 impl fmt::Debug for Label {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "L");
+        write!(f, "L'");
         for (i, multiply) in self.0.iter().enumerate() {
             for (j, plus) in multiply.iter().enumerate() {
-                write!(f, "{:?}", plus);
+                write!(f, "{}", plus);
                 if j < multiply.len() - 1 {
                     write!(f, ".");
                 }
@@ -17,6 +17,6 @@ impl fmt::Debug for Label {
                 write!(f, "*");
             }
         }
-        write!(f, "")
+        write!(f, "'")
     }
 }

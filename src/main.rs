@@ -43,11 +43,29 @@ fn make_named_one(name: &str) -> APG {
 }
 
 fn product_of_apgs(apg1: &APG, apg2: &APG) -> APG {
-    let mut new_labels = change_labels(&apg1.labels, &apg1.name);
-    new_labels.extend(change_labels(&apg2.labels, &apg2.name));
+    let new_labels1 = change_labels(&apg1.labels, &apg1.name);
+    let new_labels2 = change_labels(&apg2.labels, &apg2.name);
+    let mut new_labels = HashSet::new();
+    for label1 in new_labels1.iter() {
+        for label2 in new_labels2.iter() {
+            let mut new_label_elem = vec![];
+            new_label_elem.extend(label1.0.clone());
+            new_label_elem.extend(label2.0.clone());
+            new_labels.insert(Rc::new(Label(new_label_elem)));
+        }
+    }
 
-    let mut new_elements = change_elements(&apg1.elements, &apg1.name);
-    new_elements.extend(change_elements(&apg2.elements, &apg2.name));
+    let new_elements1 = change_elements(&apg1.elements, &apg1.name);
+    let new_elements2 = change_elements(&apg2.elements, &apg2.name);
+    let mut new_elements = HashSet::new();
+    for element1 in new_elements1.iter() {
+        for element2 in new_elements2.iter() {
+            let mut new_element_elem = vec![];
+            new_element_elem.extend(element1.0.clone());
+            new_element_elem.extend(element2.0.clone());
+            new_elements.insert(Rc::new(Element(new_element_elem)));
+        }
+    }    
 
     let mut new_lambda_upsilon = change_lambda_upsilon(&apg1.lambda_upsilon, &apg1.name);
     new_lambda_upsilon.extend(change_lambda_upsilon(&apg2.lambda_upsilon, &apg2.name));
