@@ -3,6 +3,8 @@ mod apg;
 pub use apg::{APG, APGMorphism,/* get_equalizer*/};
 pub use apg::{Element, Value, Label, Type};
 
+pub use apg::{make_named_one, product_of_apgs, coproduct_of_apgs};
+
 #[macro_export]
 macro_rules! ev {
     ($apg:ident, $e:ident) => {

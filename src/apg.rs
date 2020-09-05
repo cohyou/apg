@@ -35,6 +35,145 @@ impl fmt::Debug for APG {
     }
 }
 
+pub fn product_of_apgs(apg1: &APG, apg2: &APG) -> APG {
+    let new_labels1 = change_labels(&apg1.labels, &apg1.name);
+    let new_labels2 = change_labels(&apg2.labels, &apg2.name);
+    let mut new_labels = HashSet::new();
+    for label1 in new_labels1.iter() {
+        for label2 in new_labels2.iter() {
+            let mut new_label_elem = vec![];
+            new_label_elem.extend(label1.0.clone());
+            new_label_elem.extend(label2.0.clone());
+            new_labels.insert(Rc::new(Label(new_label_elem)));
+        }
+    }
+
+    let new_elements1 = change_elements(&apg1.elements, &apg1.name);
+    let new_elements2 = change_elements(&apg2.elements, &apg2.name);
+    let mut new_elements = HashSet::new();
+    for element1 in new_elements1.iter() {
+        for element2 in new_elements2.iter() {
+            let mut new_element_elem = vec![];
+            new_element_elem.extend(element1.0.clone());
+            new_element_elem.extend(element2.0.clone());
+            new_elements.insert(Rc::new(Element(new_element_elem)));
+        }
+    }    
+
+    let mut new_lambda_upsilon = change_lambda_upsilon(&apg1.lambda_upsilon, &apg1.name);
+    new_lambda_upsilon.extend(change_lambda_upsilon(&apg2.lambda_upsilon, &apg2.name));
+
+    let new_name = format!("{}*{}", apg1.name, apg2.name);
+    APG::new(&new_name, new_elements, new_labels, new_lambda_upsilon)
+}
+
+fn change_labels(labels: &HashSet<Rc<Label>>, name: &str) -> HashSet<Rc<Label>> {
+    if labels.contains(&Label(vec![])) {
+        let mut res = HashSet::new();
+        res.insert(Rc::new(Label(vec![vec![name.to_string()]])));
+        res
+    } else {
+        labels.clone()
+    }
+}
+
+fn change_elements(labels: &HashSet<Rc<Element>>, name: &str) -> HashSet<Rc<Element>> {
+    if labels.contains(&Element(vec![])) {
+        let mut res = HashSet::new();
+        res.insert(Rc::new(Element(vec![vec![name.to_string()]])));
+        res
+    } else {
+        labels.clone()
+    }
+}
+
+fn change_lambda_upsilon(lambda_upsilon: &LambdaUpsilon, name: &str) -> LambdaUpsilon {
+    if lambda_upsilon.len() == 1 && 
+    lambda_upsilon[&Element::default()].0.as_ref() == &Label::default() {
+        let mut res = HashMap::new();
+        let new_element = Element(vec![vec![name.to_string()]]);
+        let new_label = Label(vec![vec![name.to_string()]]);
+        res.insert(Rc::new(new_element), (Rc::new(new_label), Rc::new(Value::Unit)));
+        res
+    } else {
+        lambda_upsilon.clone()
+    }
+}
+
+pub fn coproduct_of_apgs<F>(apg1: &APG, apg2: &APG) -> APG where F: Fn(&APG, &APG) -> String {
+    let prefix1 = apg1.name.clone();
+    let prefix2 = apg2.name.clone();
+
+    let a = add_prefix_to_labels(&apg1.labels, &prefix1);
+    let b = add_prefix_to_labels(&apg2.labels, &prefix2);
+    let labels = &a | &b;
+
+    let a_elements = add_prefix_to_elements(&apg1.elements, &prefix1);
+    let b_elements = add_prefix_to_elements(&apg2.elements, &prefix2);
+    let elements = &a_elements | &b_elements;
+
+    let mut a_f = replace_value(&apg1.lambda_upsilon, &prefix1);
+    let b_f = replace_value(&apg2.lambda_upsilon, &prefix2);
+
+    a_f.extend(b_f);
+
+    let new_name = prefix1.clone() + &prefix2;
+    APG::new(&new_name, elements, labels, a_f)
+}
+
+fn add_prefix_to_labels(labels: &HashSet<Rc<Label>>, prefix: &str) -> HashSet<Rc<Label>> {
+    let new_labels = labels.clone();
+    labels.iter()
+        .map(|label| {
+            let 
+            Rc::new(Label(prefix.to_string() + &e.as_ref().0))
+        })
+        .collect()
+}
+
+fn add_prefix_to_elements(elements: &HashSet<Rc<Element>>, _prefix: &str) -> HashSet<Rc<Element>> {
+    elements.iter().cloned().collect()
+        // .map(|e| {
+        //     let Element(e_name) = e.as_ref();
+        //     Rc::new(Element(prefix.to_string() + e_name))    
+        // }
+        // .collect()
+}
+
+fn replace_value(lambda_upsilon: &HashMap<String, (String, Rc<Value>)>, prefix: &str)
+-> HashMap<String, (String, Rc<Value>)> {
+    lambda_upsilon.iter()
+        // .inspect(|(k, v)| println!("replace_value: {:?} {:?}", k, v))
+        .map(|(k, v)| {
+            let new_key_sym = prefix.to_string() + k;
+            let new_label_sym = prefix.to_string() + v.0.as_ref();
+            match v.1.as_ref() {
+                Value::Id(rc_element) => {
+                    if let Element(e_name) = rc_element.as_ref() {
+                        let new_sym = prefix.to_string() + e_name;
+                        (new_key_sym, (new_label_sym, Rc::new(Value::Id(Rc::new(Element(new_sym))))))
+                    } else {
+                        unimplemented!()
+                    }
+                },
+                _ => (new_key_sym, (new_label_sym, v.1.clone())),
+            }
+        })
+        .collect::<HashMap<String, (String, Rc<Value>)>>()
+}
+
+pub fn make_named_one(name: &str) -> APG {
+    let mut elements = HashSet::new();
+    let e = Rc::new(Element::default());
+    elements.insert(e.clone());
+    let mut labels = HashSet::new();
+    let l = Rc::new(Label::default());
+    labels.insert(l.clone());
+    let mut lambda_upsilon1 = HashMap::new();
+    lambda_upsilon1.insert(e.clone(), (l.clone(), Rc::new(Value::Unit)));
+    APG::new(name, elements, labels, lambda_upsilon1)
+}
+
 #[allow(dead_code)]
 impl APG {
     pub fn new(name: &str, elements: Elements, labels: Labels, lambda_upsilon: LambdaUpsilon) -> APG {
