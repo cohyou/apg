@@ -19,10 +19,10 @@ fn test_product() {
 }
 
 fn test_coproduct() {
-    let apg1 = make_named_one("false");
-    let apg2 = make_named_one("true");
-    let apg3 = coproduct_of_apgs(&apg1, &apg2);
-    println!("{:?}", apg3);
+    let _apg1 = make_named_one("false");
+    let _apg2 = make_named_one("true");
+    // let apg3 = coproduct_of_apgs(&apg1, &apg2);
+    // println!("{:?}", apg3);
 }
 
 fn _sum_books_price() {

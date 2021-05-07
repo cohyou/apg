@@ -106,29 +106,30 @@ pub fn coproduct_of_apgs<F>(apg1: &APG, apg2: &APG) -> APG where F: Fn(&APG, &AP
 
     let a = add_prefix_to_labels(&apg1.labels, &prefix1);
     let b = add_prefix_to_labels(&apg2.labels, &prefix2);
-    let labels = &a | &b;
+    let _labels = &a | &b;
 
     let a_elements = add_prefix_to_elements(&apg1.elements, &prefix1);
     let b_elements = add_prefix_to_elements(&apg2.elements, &prefix2);
-    let elements = &a_elements | &b_elements;
+    let _elements = &a_elements | &b_elements;
 
     let mut a_f = replace_value(&apg1.lambda_upsilon, &prefix1);
     let b_f = replace_value(&apg2.lambda_upsilon, &prefix2);
 
     a_f.extend(b_f);
 
-    let new_name = prefix1.clone() + &prefix2;
-    APG::new(&new_name, elements, labels, a_f)
+    let _new_name = prefix1.clone() + &prefix2;
+    // APG::new(&new_name, elements, labels, a_f)
+    unimplemented!()
 }
 
-fn add_prefix_to_labels(labels: &HashSet<Rc<Label>>, prefix: &str) -> HashSet<Rc<Label>> {
-    let new_labels = labels.clone();
-    labels.iter()
-        .map(|label| {
-            let 
-            Rc::new(Label(prefix.to_string() + &e.as_ref().0))
-        })
-        .collect()
+fn add_prefix_to_labels(_labels: &HashSet<Rc<Label>>, _prefix: &str) -> HashSet<Rc<Label>> {
+    // let new_labels = labels.clone();
+    // labels.iter()
+    //     .map(|label| {
+    //         Rc::new(Label(vec![vec![prefix.to_string()]]))
+    //     })
+    //     .collect()
+    unimplemented!()
 }
 
 fn add_prefix_to_elements(elements: &HashSet<Rc<Element>>, _prefix: &str) -> HashSet<Rc<Element>> {
@@ -140,18 +141,19 @@ fn add_prefix_to_elements(elements: &HashSet<Rc<Element>>, _prefix: &str) -> Has
         // .collect()
 }
 
-fn replace_value(lambda_upsilon: &HashMap<String, (String, Rc<Value>)>, prefix: &str)
+fn replace_value(lambda_upsilon: &HashMap<Rc<Element>, (Rc<Label>, Rc<Value>)>, prefix: &str)
 -> HashMap<String, (String, Rc<Value>)> {
     lambda_upsilon.iter()
         // .inspect(|(k, v)| println!("replace_value: {:?} {:?}", k, v))
-        .map(|(k, v)| {
-            let new_key_sym = prefix.to_string() + k;
-            let new_label_sym = prefix.to_string() + v.0.as_ref();
+        .map(|(_k, v)| {
+            let new_key_sym = prefix.to_string(); // + k;
+            let new_label_sym = prefix.to_string(); // + v.0.as_ref();
             match v.1.as_ref() {
                 Value::Id(rc_element) => {
-                    if let Element(e_name) = rc_element.as_ref() {
-                        let new_sym = prefix.to_string() + e_name;
-                        (new_key_sym, (new_label_sym, Rc::new(Value::Id(Rc::new(Element(new_sym))))))
+                    #[allow(irrefutable_let_patterns)]
+                    if let Element(_e_name) = rc_element.as_ref() {
+                        let new_sym = prefix.to_string(); // + e_name;
+                        (new_key_sym, (new_label_sym, Rc::new(Value::Id(Rc::new(Element(vec![vec![new_sym]]))))))
                     } else {
                         unimplemented!()
                     }
